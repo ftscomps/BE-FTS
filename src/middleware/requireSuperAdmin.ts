@@ -10,14 +10,19 @@ import { AuthenticatedRequest } from './auth';
 /**
  * Middleware untuk memastikan user adalah super admin
  */
-export const requireSuperAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const requireSuperAdmin = (
+	req: AuthenticatedRequest,
+	res: Response,
+	next: NextFunction
+): void => {
 	try {
 		// Check if user is authenticated
 		if (!req.user) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Check if user is super admin
@@ -26,10 +31,11 @@ export const requireSuperAdmin = (req: AuthenticatedRequest, res: Response, next
 				`⚠️ Non-super admin user ${req.user.id} attempted to access super admin endpoint: ${req.originalUrl}`
 			);
 
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'Only super admin can access this endpoint',
 			});
+			return;
 		}
 
 		// User is super admin, continue to next middleware

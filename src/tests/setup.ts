@@ -1,5 +1,4 @@
 // Test setup file for Jest
-import { PrismaClient } from '@prisma/client';
 
 // Global test setup
 beforeAll(async () => {

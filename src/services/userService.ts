@@ -3,7 +3,7 @@
  * Business logic untuk user management operations
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 import bcrypt from 'bcryptjs';
 import { logger } from '../utils/logger';
 import {
@@ -24,7 +24,6 @@ import {
  * User Service class
  */
 export class UserService {
-	private prisma: PrismaClient;
 	private validationRules: UserValidationRules = {
 		email: {
 			required: true,
@@ -48,9 +47,7 @@ export class UserService {
 		},
 	};
 
-	constructor(prisma: PrismaClient) {
-		this.prisma = prisma;
-	}
+	constructor() {}
 
 	/**
 	 * Validate user data
@@ -143,7 +140,7 @@ export class UserService {
 			this.validateUserData(data);
 
 			// Check if email already exists
-			const existingUser = await this.prisma.user.findUnique({
+			const existingUser = await (prisma as any).user.findUnique({
 				where: { email: data.email },
 			});
 
@@ -155,7 +152,7 @@ export class UserService {
 			const hashedPassword = await this.hashPassword(data.password);
 
 			// Create user
-			const newUser = await this.prisma.user.create({
+			const newUser = await (prisma as any).user.create({
 				data: {
 					email: data.email,
 					name: data.name,
@@ -207,10 +204,10 @@ export class UserService {
 			}
 
 			// Get total count
-			const total = await this.prisma.user.count({ where });
+			const total = await (prisma as any).user.count({ where });
 
 			// Get users
-			const users = await this.prisma.user.findMany({
+			const users = await (prisma as any).user.findMany({
 				where,
 				include: {
 					_count: {
@@ -246,7 +243,7 @@ export class UserService {
 	 */
 	async getUserById(id: string): Promise<UserWithProjects | null> {
 		try {
-			const user = await this.prisma.user.findUnique({
+			const user = await (prisma as any).user.findUnique({
 				where: { id },
 				include: {
 					projects: true,
@@ -268,7 +265,7 @@ export class UserService {
 	 */
 	async getUserByEmail(email: string): Promise<User | null> {
 		try {
-			const user = await this.prisma.user.findUnique({
+			const user = await (prisma as any).user.findUnique({
 				where: { email },
 			});
 
@@ -290,7 +287,7 @@ export class UserService {
 	async updateUser(id: string, data: UpdateUserRequest, updatedBy?: string): Promise<User> {
 		try {
 			// Check if user exists
-			const existingUser = await this.prisma.user.findUnique({
+			const existingUser = await (prisma as any).user.findUnique({
 				where: { id },
 			});
 
@@ -303,7 +300,7 @@ export class UserService {
 
 			// Check if email already exists (if email is being updated)
 			if (data.email && data.email !== existingUser.email) {
-				const emailExists = await this.prisma.user.findUnique({
+				const emailExists = await (prisma as any).user.findUnique({
 					where: { email: data.email },
 				});
 
@@ -321,7 +318,7 @@ export class UserService {
 			}
 
 			// Update user
-			const updatedUser = await this.prisma.user.update({
+			const updatedUser = await (prisma as any).user.update({
 				where: { id },
 				data: updateData,
 			});
@@ -344,7 +341,7 @@ export class UserService {
 	async deleteUser(id: string, deletedBy?: string): Promise<void> {
 		try {
 			// Check if user exists
-			const existingUser = await this.prisma.user.findUnique({
+			const existingUser = await (prisma as any).user.findUnique({
 				where: { id },
 			});
 
@@ -353,7 +350,7 @@ export class UserService {
 			}
 
 			// Delete user (cascade delete will handle projects)
-			await this.prisma.user.delete({
+			await (prisma as any).user.delete({
 				where: { id },
 			});
 
@@ -370,14 +367,14 @@ export class UserService {
 	async getUserStats(): Promise<UserStats> {
 		try {
 			// Get data sequentially to avoid Promise.all type issues
-			const total = await this.prisma.user.count();
+			const total = await (prisma as any).user.count();
 
-			const usersByRole = await this.prisma.user.groupBy({
+			const usersByRole = await (prisma as any).user.groupBy({
 				by: ['role'],
 				_count: true,
 			});
 
-			const recentUsers = await this.prisma.user.findMany({
+			const recentUsers = await (prisma as any).user.findMany({
 				where: {
 					createdAt: {
 						gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -411,7 +408,7 @@ export class UserService {
 	 */
 	async getUserProfile(id: string): Promise<UserProfileResponse | null> {
 		try {
-			const user = await this.prisma.user.findUnique({
+			const user = await (prisma as any).user.findUnique({
 				where: { id },
 				include: {
 					_count: {
@@ -441,7 +438,7 @@ export class UserService {
 	 */
 	async getUserActivitySummary(id: string): Promise<UserActivitySummary | null> {
 		try {
-			const user = await this.prisma.user.findUnique({
+			const user = await (prisma as any).user.findUnique({
 				where: { id },
 			});
 
@@ -452,26 +449,26 @@ export class UserService {
 			const [totalActivities, activitiesByAction, activitiesByResource, recentActivities] =
 				await Promise.all([
 					// Total activities
-					this.prisma.activityLog.count({
+					(prisma as any).activityLog.count({
 						where: { userId: id },
 					}),
 
 					// Activities by action
-					this.prisma.activityLog.groupBy({
+					(prisma as any).activityLog.groupBy({
 						by: ['action'],
 						where: { userId: id },
 						_count: true,
 					}),
 
 					// Activities by resource type
-					this.prisma.activityLog.groupBy({
+					(prisma as any).activityLog.groupBy({
 						by: ['resourceType'],
 						where: { userId: id },
 						_count: true,
 					}),
 
 					// Recent activities
-					this.prisma.activityLog.findMany({
+					(prisma as any).activityLog.findMany({
 						where: { userId: id },
 						take: 10,
 						orderBy: { createdAt: 'desc' },
@@ -508,7 +505,7 @@ export class UserService {
 	async changePassword(id: string, currentPassword: string, newPassword: string): Promise<void> {
 		try {
 			// Get user
-			const user = await this.prisma.user.findUnique({
+			const user = await (prisma as any).user.findUnique({
 				where: { id },
 			});
 
@@ -529,7 +526,7 @@ export class UserService {
 			const hashedNewPassword = await this.hashPassword(newPassword);
 
 			// Update password
-			await this.prisma.user.update({
+			await (prisma as any).user.update({
 				where: { id },
 				data: { passwordHash: hashedNewPassword },
 			});

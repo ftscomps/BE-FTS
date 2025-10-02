@@ -11,15 +11,20 @@ import { activityLogger } from '../middleware/activityLogger';
 /**
  * Get activity logs dengan filtering dan pagination
  */
-export const getActivityLogs = async (req: AuthenticatedRequest, res: Response) => {
+export const getActivityLogs = async (
+	req: AuthenticatedRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Parse query parameters
@@ -76,10 +81,11 @@ export const getActivityLogs = async (req: AuthenticatedRequest, res: Response) 
 
 		if (error instanceof Error) {
 			if (error.message.includes('Invalid')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -96,16 +102,17 @@ export const getActivityLogs = async (req: AuthenticatedRequest, res: Response) 
 export const getActivityStats = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Parse query parameters
@@ -153,34 +160,37 @@ export const getActivityStats = async (
 export const getUserActivityLogs = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Check if user is super admin
 		if (!req.user || req.user.role !== 'super_admin') {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'Only super admin can access user activity logs',
 			});
+			return;
 		}
 
 		// Get target user ID from request parameters
 		const { targetUserId } = req.params;
 
 		if (!targetUserId) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Target user ID is required',
 			});
+			return;
 		}
 
 		// Parse query parameters
@@ -236,10 +246,11 @@ export const getUserActivityLogs = async (
 
 		if (error instanceof Error) {
 			if (error.message.includes('Invalid')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -256,34 +267,37 @@ export const getUserActivityLogs = async (
 export const getUserActivityStats = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Check if user is super admin
 		if (!req.user || req.user.role !== 'super_admin') {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'Only super admin can access user activity statistics',
 			});
+			return;
 		}
 
 		// Get target user ID from request parameters
 		const { targetUserId } = req.params;
 
 		if (!targetUserId) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Target user ID is required',
 			});
+			return;
 		}
 
 		// Parse query parameters
@@ -330,24 +344,26 @@ export const getUserActivityStats = async (
 export const exportActivityLogs = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Check if user is super admin
 		if (!req.user || req.user.role !== 'super_admin') {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'Only super admin can export activity logs',
 			});
+			return;
 		}
 
 		// Parse query parameters

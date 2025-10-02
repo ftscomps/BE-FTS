@@ -3,37 +3,37 @@
  * Prisma client setup dengan connection management
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient as PrismaClientType } from '@prisma/client';
 import { logger } from '../utils/logger';
 
 /**
  * Extended Prisma Client dengan logging dan error handling
  */
-class ExtendedPrismaClient extends PrismaClient {
+class ExtendedPrismaClient extends (PrismaClientType as any) {
 	constructor() {
 		super({
 			log: [
 				{
-					emit: 'event',
-					level: 'query',
+					emit: 'event' as any,
+					level: 'query' as any,
 				},
 				{
-					emit: 'event',
-					level: 'error',
+					emit: 'event' as any,
+					level: 'error' as any,
 				},
 				{
-					emit: 'event',
-					level: 'info',
+					emit: 'event' as any,
+					level: 'info' as any,
 				},
 				{
-					emit: 'event',
-					level: 'warn',
+					emit: 'event' as any,
+					level: 'warn' as any,
 				},
 			],
 		});
 
 		// Log queries di development
-		this['$on']('query', (e: any) => {
+		(this as any).$on('query', (e: any) => {
 			if (process.env['NODE_ENV'] === 'development') {
 				logger.debug(`Query: ${e.query}`);
 				logger.debug(`Params: ${e.params}`);
@@ -42,17 +42,17 @@ class ExtendedPrismaClient extends PrismaClient {
 		});
 
 		// Log errors
-		this['$on']('error', (e: any) => {
+		(this as any).$on('error', (e: any) => {
 			logger.error('Prisma Error:', e);
 		});
 
 		// Log info
-		this['$on']('info', (e: any) => {
+		(this as any).$on('info', (e: any) => {
 			logger.info('Prisma Info:', e.message);
 		});
 
 		// Log warnings
-		this['$on']('warn', (e: any) => {
+		(this as any).$on('warn', (e: any) => {
 			logger.warn('Prisma Warning:', e.message);
 		});
 	}
@@ -62,7 +62,7 @@ class ExtendedPrismaClient extends PrismaClient {
 	 */
 	async disconnect(): Promise<void> {
 		try {
-			await this['$disconnect']();
+			await (this as any).$disconnect();
 			logger.info('✅ Database disconnected successfully');
 		} catch (error) {
 			logger.error('❌ Error disconnecting from database:', error);
@@ -75,7 +75,7 @@ class ExtendedPrismaClient extends PrismaClient {
 	 */
 	async healthCheck(): Promise<boolean> {
 		try {
-			await this['$queryRaw']`SELECT 1`;
+			await (this as any).$queryRaw`SELECT 1`;
 			return true;
 		} catch (error) {
 			logger.error('❌ Database health check failed:', error);
@@ -88,7 +88,7 @@ class ExtendedPrismaClient extends PrismaClient {
 	 */
 	getConnectionInfo(): { url: string; connected: boolean } {
 		return {
-			url: this['_engine'].datasourceUrl || 'Unknown',
+			url: (this as any)._engine?.datasourceUrl || 'Unknown',
 			connected: true, // Simplified, bisa ditambah dengan logic yang lebih kompleks
 		};
 	}

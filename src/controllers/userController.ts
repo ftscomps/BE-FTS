@@ -12,23 +12,29 @@ import { CreateUserRequest, UpdateUserRequest, UserQuery } from '../types/user';
 /**
  * Get all users dengan pagination dan filtering (super admin only)
  */
-export const getUsers = async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
+export const getUsers = async (
+	req: AuthenticatedRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Check if user is super admin
 		if (!req.user || req.user.role !== 'super_admin') {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'Only super admin can access user management',
 			});
+			return;
 		}
 
 		// Parse query parameters
@@ -62,7 +68,7 @@ export const getUsers = async (req: AuthenticatedRequest, res: Response, _next: 
 		}
 
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Get users
 		const result = await userService.getUsers(query);
@@ -79,10 +85,11 @@ export const getUsers = async (req: AuthenticatedRequest, res: Response, _next: 
 
 		if (error instanceof Error) {
 			if (error.message.includes('Invalid')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -106,38 +113,42 @@ export const getUserById = async (
 		const { id } = req.params;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		if (!id) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'User ID is required',
 			});
+			return;
 		}
 
 		// Users can only get their own profile unless they are super admin
 		if (userId !== id && (!req.user || req.user.role !== 'super_admin')) {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'You can only access your own profile',
 			});
+			return;
 		}
 
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Get user
 		const user = await userService.getUserById(id);
 
 		if (!user) {
-			return res.status(404).json({
+			res.status(404).json({
 				error: 'Not Found',
 				message: 'User not found',
 			});
+			return;
 		}
 
 		// Remove password hash from response
@@ -163,37 +174,44 @@ export const getUserById = async (
 /**
  * Create new user (super admin only)
  */
-export const createUser = async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
+export const createUser = async (
+	req: AuthenticatedRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Check if user is super admin
 		if (!req.user || req.user.role !== 'super_admin') {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'Only super admin can create users',
 			});
+			return;
 		}
 
 		const data: CreateUserRequest = req.body;
 
 		// Validate input
 		if (!data.email || !data.name || !data.password) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Email, name, and password are required',
 			});
+			return;
 		}
 
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Create user
 		const newUser = await userService.createUser(data, userId);
@@ -210,10 +228,11 @@ export const createUser = async (req: AuthenticatedRequest, res: Response, _next
 
 		if (error instanceof Error) {
 			if (error.message.includes('required') || error.message.includes('already exists')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -227,53 +246,62 @@ export const createUser = async (req: AuthenticatedRequest, res: Response, _next
 /**
  * Update user
  */
-export const updateUser = async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
+export const updateUser = async (
+	req: AuthenticatedRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 		const { id } = req.params;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		if (!id) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'User ID is required',
 			});
+			return;
 		}
 
 		// Users can only update their own profile unless they are super admin
 		if (userId !== id && (!req.user || req.user.role !== 'super_admin')) {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'You can only update your own profile',
 			});
+			return;
 		}
 
 		const data: UpdateUserRequest = req.body;
 
 		// Validate that at least one field is provided
 		if (Object.keys(data).length === 0) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'At least one field must be provided for update',
 			});
+			return;
 		}
 
 		// Regular users cannot change their role
 		if (userId !== id && (!req.user || req.user.role !== 'super_admin') && data.role) {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'You cannot change your role',
 			});
+			return;
 		}
 
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Update user
 		const updatedUser = await userService.updateUser(id, data, userId);
@@ -290,16 +318,18 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response, _next
 
 		if (error instanceof Error) {
 			if (error.message.includes('not found')) {
-				return res.status(404).json({
+				res.status(404).json({
 					error: 'Not Found',
 					message: error.message,
 				});
+				return;
 			}
 			if (error.message.includes('required') || error.message.includes('already exists')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -313,44 +343,52 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response, _next
 /**
  * Delete user (super admin only)
  */
-export const deleteUser = async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
+export const deleteUser = async (
+	req: AuthenticatedRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Check if user is super admin
 		if (!req.user || req.user.role !== 'super_admin') {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'Only super admin can delete users',
 			});
+			return;
 		}
 
 		const { id } = req.params;
 
 		if (!id) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'User ID is required',
 			});
+			return;
 		}
 
 		// Prevent super admin from deleting themselves
 		if (userId === id) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'You cannot delete your own account',
 			});
+			return;
 		}
 
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Delete user
 		await userService.deleteUser(id, userId);
@@ -366,10 +404,11 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response, _next
 
 		if (error instanceof Error) {
 			if (error.message.includes('not found')) {
-				return res.status(404).json({
+				res.status(404).json({
 					error: 'Not Found',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -387,27 +426,29 @@ export const getUserStats = async (
 	req: AuthenticatedRequest,
 	res: Response,
 	_next: NextFunction
-) => {
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Check if user is super admin
 		if (!req.user || req.user.role !== 'super_admin') {
-			return res.status(403).json({
+			res.status(403).json({
 				error: 'Forbidden',
 				message: 'Only super admin can access user statistics',
 			});
+			return;
 		}
 
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Get user statistics
 		const stats = await userService.getUserStats();
@@ -436,28 +477,30 @@ export const changePassword = async (
 	req: AuthenticatedRequest,
 	res: Response,
 	_next: NextFunction
-) => {
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		const { currentPassword, newPassword } = req.body;
 
 		if (!currentPassword || !newPassword) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Current password and new password are required',
 			});
+			return;
 		}
 
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Change password
 		await userService.changePassword(userId, currentPassword, newPassword);
@@ -473,22 +516,25 @@ export const changePassword = async (
 
 		if (error instanceof Error) {
 			if (error.message.includes('not found')) {
-				return res.status(404).json({
+				res.status(404).json({
 					error: 'Not Found',
 					message: error.message,
 				});
+				return;
 			}
 			if (error.message.includes('incorrect')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 			if (error.message.includes('required')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -506,28 +552,30 @@ export const getUserProfile = async (
 	req: AuthenticatedRequest,
 	res: Response,
 	_next: NextFunction
-) => {
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Get user profile
 		const profile = await userService.getUserProfile(userId);
 
 		if (!profile) {
-			return res.status(404).json({
+			res.status(404).json({
 				error: 'Not Found',
 				message: 'User profile not found',
 			});
+			return;
 		}
 
 		logger.info(`✅ User profile retrieved: ${profile.email}`);
@@ -550,10 +598,14 @@ export const getUserProfile = async (
 /**
  * Get user validation rules
  */
-export const getUserValidationRules = async (req: Request, res: Response, _next: NextFunction) => {
+export const getUserValidationRules = async (
+	_req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		// Create service instance
-		const userService = new UserService(require('../config/database').default);
+		const userService = new UserService();
 
 		// Get validation rules
 		const rules = userService.getValidationRules();

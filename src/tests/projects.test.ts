@@ -1,6 +1,5 @@
 // Unit tests for project service
 import { ProjectService } from '../services/projectService';
-import { PrismaClient } from '@prisma/client';
 
 describe('ProjectService', () => {
 	let projectService: ProjectService;
@@ -25,7 +24,7 @@ describe('ProjectService', () => {
 			$on: jest.fn(),
 		};
 
-		projectService = new ProjectService(prismaMock as any);
+		projectService = new ProjectService();
 		jest.clearAllMocks();
 	});
 

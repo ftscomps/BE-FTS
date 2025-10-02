@@ -3,7 +3,7 @@
  * Business logic untuk project CRUD operations
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import {
 	ProjectWithUser,
@@ -20,7 +20,6 @@ import {
  * Project Service class
  */
 export class ProjectService {
-	private prisma: PrismaClient;
 	private validationRules: ProjectValidationRules = {
 		title: {
 			minLength: 3,
@@ -43,9 +42,7 @@ export class ProjectService {
 		},
 	};
 
-	constructor(prisma: PrismaClient) {
-		this.prisma = prisma;
-	}
+	constructor() {}
 
 	/**
 	 * Validate project data
@@ -132,7 +129,7 @@ export class ProjectService {
 			this.validateProjectData(data);
 
 			// Create project
-			const newProject = await this.prisma.project.create({
+			const newProject = await (prisma as any).project.create({
 				data: {
 					...data,
 					createdBy,
@@ -200,10 +197,10 @@ export class ProjectService {
 			}
 
 			// Get total count
-			const total = await this.prisma.project.count({ where });
+			const total = await (prisma as any).project.count({ where });
 
 			// Get projects
-			const projects = await this.prisma.project.findMany({
+			const projects = await (prisma as any).project.findMany({
 				where,
 				include: {
 					creator: {
@@ -244,7 +241,7 @@ export class ProjectService {
 	 */
 	async getProjectById(id: string): Promise<ProjectWithImages | null> {
 		try {
-			const project = await this.prisma.project.findUnique({
+			const project = await (prisma as any).project.findUnique({
 				where: { id },
 				include: {
 					creator: {
@@ -276,7 +273,7 @@ export class ProjectService {
 	): Promise<ProjectWithUser> {
 		try {
 			// Check if project exists
-			const existingProject = await this.prisma.project.findUnique({
+			const existingProject = await (prisma as any).project.findUnique({
 				where: { id },
 			});
 
@@ -288,7 +285,7 @@ export class ProjectService {
 			this.validateProjectData(data);
 
 			// Update project
-			const updatedProject = await this.prisma.project.update({
+			const updatedProject = await (prisma as any).project.update({
 				where: { id },
 				data,
 				include: {
@@ -324,7 +321,7 @@ export class ProjectService {
 	async deleteProject(id: string, deletedBy: string): Promise<void> {
 		try {
 			// Check if project exists
-			const existingProject = await this.prisma.project.findUnique({
+			const existingProject = await (prisma as any).project.findUnique({
 				where: { id },
 			});
 
@@ -333,7 +330,7 @@ export class ProjectService {
 			}
 
 			// Delete project (cascade delete will handle images)
-			await this.prisma.project.delete({
+			await (prisma as any).project.delete({
 				where: { id },
 			});
 
@@ -356,20 +353,20 @@ export class ProjectService {
 		try {
 			const [total, projectsByTags, projectsByCreator, recentProjects] = await Promise.all([
 				// Total projects
-				this.prisma.project.count(),
+				(prisma as any).project.count(),
 
 				// Projects by tags
-				this.prisma.project.findMany({
+				(prisma as any).project.findMany({
 					select: { tags: true },
 				}),
 
 				// Projects by creator
-				this.prisma.project.findMany({
+				(prisma as any).project.findMany({
 					select: { createdBy: true },
 				}),
 
 				// Recent projects
-				this.prisma.project.findMany({
+				(prisma as any).project.findMany({
 					take: 5,
 					orderBy: { createdAt: 'desc' },
 					include: {
@@ -426,7 +423,7 @@ export class ProjectService {
 		userAgent?: string
 	): Promise<void> {
 		try {
-			await this.prisma.activityLog.create({
+			await (prisma as any).activityLog.create({
 				data: {
 					userId,
 					action,

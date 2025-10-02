@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { UploadService } from '../services/uploadService';
-import { MulterFile, UploadErrorType } from '../types/upload';
+import { UploadErrorType } from '../types/upload';
 
 // Extended Request interface untuk upload
 interface UploadRequest extends AuthenticatedRequest {
@@ -21,25 +21,27 @@ interface UploadRequest extends AuthenticatedRequest {
 export const uploadSingle = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		const file = (req as any).file;
 
 		if (!file) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'No file uploaded',
 			});
+			return;
 		}
 
 		// Get options from request
@@ -50,7 +52,7 @@ export const uploadSingle = async (
 		};
 
 		// Create service instance
-		const uploadService = new UploadService(require('../config/database').default);
+		const uploadService = new UploadService();
 
 		// Upload file
 		const result = await uploadService.uploadSingleFile(file, options);
@@ -67,10 +69,11 @@ export const uploadSingle = async (
 
 		if (error instanceof Error) {
 			if (error.message.includes('not allowed') || error.message.includes('exceeds')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -84,24 +87,30 @@ export const uploadSingle = async (
 /**
  * Upload multiple files
  */
-export const uploadMultiple = async (req: UploadRequest, res: Response, next: NextFunction) => {
+export const uploadMultiple = async (
+	req: UploadRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		const files = (req as any).files;
 
 		if (!files || files.length === 0) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'No files uploaded',
 			});
+			return;
 		}
 
 		// Get options from request
@@ -111,7 +120,7 @@ export const uploadMultiple = async (req: UploadRequest, res: Response, next: Ne
 		};
 
 		// Create service instance
-		const uploadService = new UploadService(require('../config/database').default);
+		const uploadService = new UploadService();
 
 		// Upload files
 		const result = await uploadService.uploadMultipleFiles(files, options);
@@ -138,27 +147,33 @@ export const uploadMultiple = async (req: UploadRequest, res: Response, next: Ne
 /**
  * Delete file
  */
-export const deleteFile = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const deleteFile = async (
+	req: AuthenticatedRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 		const { publicId } = req.body;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		if (!publicId) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Public ID is required',
 			});
+			return;
 		}
 
 		// Create service instance
-		const uploadService = new UploadService(require('../config/database').default);
+		const uploadService = new UploadService();
 
 		// Delete file
 		const result = await uploadService.deleteFile(publicId);
@@ -175,10 +190,11 @@ export const deleteFile = async (req: AuthenticatedRequest, res: Response, next:
 
 		if (error instanceof Error) {
 			if (error.message.includes('not found')) {
-				return res.status(404).json({
+				res.status(404).json({
 					error: 'Not Found',
 					message: 'File not found',
 				});
+				return;
 			}
 		}
 
@@ -192,20 +208,25 @@ export const deleteFile = async (req: AuthenticatedRequest, res: Response, next:
 /**
  * Get file URL with transformations
  */
-export const getFileUrl = async (req: Request, res: Response, next: NextFunction) => {
+export const getFileUrl = async (
+	req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const { publicId } = req.params;
 		const { width, height, crop, quality, format } = req.query;
 
 		if (!publicId) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Public ID is required',
 			});
+			return;
 		}
 
 		// Create service instance
-		const uploadService = new UploadService(require('../config/database').default);
+		const uploadService = new UploadService();
 
 		// Get image URL with transformations
 		const transformations: any = {};
@@ -255,10 +276,14 @@ export const getFileUrl = async (req: Request, res: Response, next: NextFunction
 /**
  * Get upload configuration
  */
-export const getUploadConfig = async (req: Request, res: Response, next: NextFunction) => {
+export const getUploadConfig = async (
+	_req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		// Create service instance
-		const uploadService = new UploadService(require('../config/database').default);
+		const uploadService = new UploadService();
 
 		// Get upload configuration
 		const config = uploadService.getUploadConfig();
@@ -283,28 +308,36 @@ export const getUploadConfig = async (req: Request, res: Response, next: NextFun
 /**
  * Handle upload errors
  */
-export const handleUploadError = (error: any, req: Request, res: Response, next: NextFunction) => {
+export const handleUploadError = (
+	error: any,
+	_req: Request,
+	res: Response,
+	_next: NextFunction
+): void => {
 	logger.error('❌ Upload error:', error);
 
 	if (error.code === 'LIMIT_FILE_SIZE') {
-		return res.status(413).json({
+		res.status(413).json({
 			error: UploadErrorType.FILE_TOO_LARGE,
 			message: 'File size exceeds maximum limit',
 		});
+		return;
 	}
 
 	if (error.code === 'LIMIT_FILE_COUNT') {
-		return res.status(413).json({
+		res.status(413).json({
 			error: UploadErrorType.FILE_TOO_LARGE,
 			message: 'Too many files uploaded',
 		});
+		return;
 	}
 
 	if (error.code === 'LIMIT_UNEXPECTED_FILE') {
-		return res.status(400).json({
+		res.status(400).json({
 			error: UploadErrorType.INVALID_FILE_TYPE,
 			message: 'Unexpected file field',
 		});
+		return;
 	}
 
 	// Default error

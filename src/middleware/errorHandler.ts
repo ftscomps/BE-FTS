@@ -116,7 +116,7 @@ const sendErrorProd = (err: AppError, res: Response): void => {
 /**
  * Global error handler middleware
  */
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction): void => {
+export const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction): void => {
 	err.statusCode = err.statusCode || 500;
 	err.status = err.status || 'error';
 

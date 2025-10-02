@@ -4,15 +4,14 @@
  */
 
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 /**
  * Basic health check endpoint
  */
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
 	try {
 		const healthCheck = {
 			status: 'ok',
@@ -36,12 +35,12 @@ router.get('/', async (req, res) => {
 /**
  * Detailed health check with database connectivity
  */
-router.get('/detailed', async (req, res) => {
+router.get('/detailed', async (_req, res) => {
 	try {
 		const startTime = Date.now();
 
 		// Test database connection
-		await prisma.$queryRaw`SELECT 1`;
+		await (prisma as any)['$queryRaw']`SELECT 1`;
 		const dbResponseTime = Date.now() - startTime;
 
 		const healthCheck = {
@@ -87,10 +86,10 @@ router.get('/detailed', async (req, res) => {
 /**
  * Readiness probe for container orchestration
  */
-router.get('/ready', async (req, res) => {
+router.get('/ready', async (_req, res): Promise<void> => {
 	try {
 		// Check if database is ready
-		await prisma.$queryRaw`SELECT 1`;
+		await (prisma as any)['$queryRaw']`SELECT 1`;
 
 		// Check if all required environment variables are set
 		const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
@@ -98,12 +97,13 @@ router.get('/ready', async (req, res) => {
 		const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
 
 		if (missingEnvVars.length > 0) {
-			return res.status(503).json({
+			res.status(503).json({
 				status: 'not ready',
 				timestamp: new Date().toISOString(),
 				error: 'Missing required environment variables',
 				missing: missingEnvVars,
 			});
+			return;
 		}
 
 		res.status(200).json({
@@ -122,7 +122,7 @@ router.get('/ready', async (req, res) => {
 /**
  * Liveness probe for container orchestration
  */
-router.get('/live', (req, res) => {
+router.get('/live', (_req, res) => {
 	try {
 		// Simple liveness check - if we can respond, we're alive
 		res.status(200).json({

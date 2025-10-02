@@ -2,7 +2,6 @@
 import { AuthService } from '../services/authService';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
 
 // Mock dependencies
 jest.mock('bcryptjs');

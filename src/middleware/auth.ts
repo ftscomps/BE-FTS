@@ -38,7 +38,7 @@ export const authenticate = (options: AuthMiddlewareOptions = {}) => {
 			}
 
 			// Verify token
-			const authService = new AuthService(prisma);
+			const authService = new AuthService(prisma as any);
 			const user = authService.verifyAccessToken(token);
 
 			// Check role-based access if roles are specified

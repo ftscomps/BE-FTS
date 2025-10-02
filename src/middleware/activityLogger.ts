@@ -41,7 +41,7 @@ export class ActivityLoggerMiddleware {
 					userId: data.userId,
 					action: data.action,
 					resourceType: data.resourceType,
-					resourceId: data.resourceId,
+					resourceId: data.resourceId || null,
 					details: data.details || {},
 					ipAddress: data.ipAddress || '127.0.0.1',
 					userAgent: data.userAgent || 'Unknown',
@@ -84,7 +84,7 @@ export class ActivityLoggerMiddleware {
 	 * Create activity logging middleware
 	 */
 	createLogger(action: string, resourceType: string) {
-		return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+		return async (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
 			// Only log if user is authenticated
 			if (!req.user) {
 				return next();
@@ -239,7 +239,7 @@ export class ActivityLoggerMiddleware {
 	/**
 	 * Extract upload-specific details
 	 */
-	private extractUploadDetails(req: AuthenticatedRequest, action: string, details: any): any {
+	private extractUploadDetails(req: AuthenticatedRequest, _action: string, details: any): any {
 		if (req.file) {
 			details.uploadData = {
 				filename: req.file.filename,

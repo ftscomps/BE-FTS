@@ -5,13 +5,12 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
-import { validate, validateQuery, validateParams } from '../utils/validation';
 
 /**
  * Validation middleware factory untuk request body
  */
 export const validateRequest = (schema: any) => {
-	return (req: Request, res: Response, next: NextFunction) => {
+	return (req: Request, res: Response, next: NextFunction): void => {
 		try {
 			// Validate request body
 			const result = schema.safeParse(req.body);
@@ -24,12 +23,13 @@ export const validateRequest = (schema: any) => {
 
 				logger.warn(`❌ Request validation failed: ${JSON.stringify(errorMessages)}`);
 
-				return res.status(400).json({
+				res.status(400).json({
 					success: false,
 					error: 'Validation Error',
 					message: 'Invalid input data',
 					details: errorMessages,
 				});
+				return;
 			}
 
 			// Replace request body with validated data
@@ -38,7 +38,7 @@ export const validateRequest = (schema: any) => {
 		} catch (error) {
 			logger.error('❌ Request validation error:', error);
 
-			return res.status(500).json({
+			res.status(500).json({
 				success: false,
 				error: 'Internal Server Error',
 				message: 'Validation failed',
@@ -51,7 +51,7 @@ export const validateRequest = (schema: any) => {
  * Validation middleware factory untuk query parameters
  */
 export const validateRequestQuery = (schema: any) => {
-	return (req: Request, res: Response, next: NextFunction) => {
+	return (req: Request, res: Response, next: NextFunction): void => {
 		try {
 			// Validate query parameters
 			const result = schema.safeParse(req.query);
@@ -64,12 +64,13 @@ export const validateRequestQuery = (schema: any) => {
 
 				logger.warn(`❌ Query validation failed: ${JSON.stringify(errorMessages)}`);
 
-				return res.status(400).json({
+				res.status(400).json({
 					success: false,
 					error: 'Validation Error',
 					message: 'Invalid query parameters',
 					details: errorMessages,
 				});
+				return;
 			}
 
 			// Replace query with validated data
@@ -78,7 +79,7 @@ export const validateRequestQuery = (schema: any) => {
 		} catch (error) {
 			logger.error('❌ Query validation error:', error);
 
-			return res.status(500).json({
+			res.status(500).json({
 				success: false,
 				error: 'Internal Server Error',
 				message: 'Query validation failed',
@@ -91,7 +92,7 @@ export const validateRequestQuery = (schema: any) => {
  * Validation middleware factory untuk URL parameters
  */
 export const validateRequestParams = (schema: any) => {
-	return (req: Request, res: Response, next: NextFunction) => {
+	return (req: Request, res: Response, next: NextFunction): void => {
 		try {
 			// Validate URL parameters
 			const result = schema.safeParse(req.params);
@@ -104,12 +105,13 @@ export const validateRequestParams = (schema: any) => {
 
 				logger.warn(`❌ Parameter validation failed: ${JSON.stringify(errorMessages)}`);
 
-				return res.status(400).json({
+				res.status(400).json({
 					success: false,
 					error: 'Validation Error',
 					message: 'Invalid URL parameters',
 					details: errorMessages,
 				});
+				return;
 			}
 
 			// Replace params with validated data
@@ -118,7 +120,7 @@ export const validateRequestParams = (schema: any) => {
 		} catch (error) {
 			logger.error('❌ Parameter validation error:', error);
 
-			return res.status(500).json({
+			res.status(500).json({
 				success: false,
 				error: 'Internal Server Error',
 				message: 'Parameter validation failed',
@@ -131,7 +133,7 @@ export const validateRequestParams = (schema: any) => {
  * Validation middleware factory untuk combined validation
  */
 export const validateCombined = (schemas: { body?: any; query?: any; params?: any }) => {
-	return (req: Request, res: Response, next: NextFunction) => {
+	return (req: Request, res: Response, next: NextFunction): void => {
 		try {
 			// Validate request body if schema provided
 			if (schemas.body) {
@@ -145,12 +147,13 @@ export const validateCombined = (schemas: { body?: any; query?: any; params?: an
 
 					logger.warn(`❌ Request validation failed: ${JSON.stringify(errorMessages)}`);
 
-					return res.status(400).json({
+					res.status(400).json({
 						success: false,
 						error: 'Validation Error',
 						message: 'Invalid input data',
 						details: errorMessages,
 					});
+					return;
 				}
 
 				// Replace request body with validated data
@@ -169,12 +172,13 @@ export const validateCombined = (schemas: { body?: any; query?: any; params?: an
 
 					logger.warn(`❌ Query validation failed: ${JSON.stringify(errorMessages)}`);
 
-					return res.status(400).json({
+					res.status(400).json({
 						success: false,
 						error: 'Validation Error',
 						message: 'Invalid query parameters',
 						details: errorMessages,
 					});
+					return;
 				}
 
 				// Replace query with validated data
@@ -193,12 +197,13 @@ export const validateCombined = (schemas: { body?: any; query?: any; params?: an
 
 					logger.warn(`❌ Parameter validation failed: ${JSON.stringify(errorMessages)}`);
 
-					return res.status(400).json({
+					res.status(400).json({
 						success: false,
 						error: 'Validation Error',
 						message: 'Invalid URL parameters',
 						details: errorMessages,
 					});
+					return;
 				}
 
 				// Replace params with validated data
@@ -209,7 +214,7 @@ export const validateCombined = (schemas: { body?: any; query?: any; params?: an
 		} catch (error) {
 			logger.error('❌ Combined validation error:', error);
 
-			return res.status(500).json({
+			res.status(500).json({
 				success: false,
 				error: 'Internal Server Error',
 				message: 'Validation failed',

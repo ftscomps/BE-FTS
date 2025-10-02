@@ -19,37 +19,40 @@ import {
 /**
  * User registration controller
  */
-export const register = async (req: Request, res: Response, next: NextFunction) => {
+export const register = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
 	try {
 		const data: RegisterRequest = req.body;
 
 		// Validate input
 		if (!data.email || !data.password || !data.name) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Email, password, and name are required',
 			});
+			return;
 		}
 
 		// Validate email format
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(data.email)) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Invalid email format',
 			});
+			return;
 		}
 
 		// Validate password strength
 		if (data.password.length < 8) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Password must be at least 8 characters long',
 			});
+			return;
 		}
 
 		// Register user
-		const authService = new AuthService(prisma);
+		const authService = new AuthService(prisma as unknown as any);
 		const result = await authService.register(data);
 
 		logger.info(`✅ New user registered: ${data.email}`);
@@ -64,10 +67,11 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 		if (error instanceof Error) {
 			if (error.message.includes('already exists')) {
-				return res.status(409).json({
+				res.status(409).json({
 					error: 'Conflict',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -81,20 +85,21 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 /**
  * User login controller
  */
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+export const login = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
 	try {
 		const data: LoginRequest = req.body;
 
 		// Validate input
 		if (!data.email || !data.password) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Email and password are required',
 			});
+			return;
 		}
 
 		// Login user
-		const authService = new AuthService(prisma);
+		const authService = new AuthService(prisma as unknown as any);
 		const result = await authService.login(data);
 
 		logger.info(`✅ User logged in: ${data.email}`);
@@ -109,10 +114,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 		if (error instanceof Error) {
 			if (error.message.includes('Invalid email or password')) {
-				return res.status(401).json({
+				res.status(401).json({
 					error: 'Unauthorized',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -126,20 +132,25 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 /**
  * Refresh token controller
  */
-export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+export const refreshToken = async (
+	req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const data: RefreshTokenRequest = req.body;
 
 		// Validate input
 		if (!data.refreshToken) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Refresh token is required',
 			});
+			return;
 		}
 
 		// Refresh token
-		const authService = new AuthService(prisma);
+		const authService = new AuthService(prisma as unknown as any);
 		const result = await authService.refreshToken(data);
 
 		res.json({
@@ -152,10 +163,11 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 
 		if (error instanceof Error) {
 			if (error.message.includes('Invalid or expired')) {
-				return res.status(401).json({
+				res.status(401).json({
 					error: 'Unauthorized',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -169,19 +181,24 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 /**
  * Get user profile controller
  */
-export const getProfile = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const getProfile = async (
+	req: AuthenticatedRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Get user profile
-		const authService = new AuthService(prisma);
+		const authService = new AuthService(prisma as any);
 		const profile = await authService.getProfile(userId);
 
 		res.json({
@@ -194,10 +211,11 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response, next:
 
 		if (error instanceof Error) {
 			if (error.message.includes('not found')) {
-				return res.status(404).json({
+				res.status(404).json({
 					error: 'Not Found',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -214,41 +232,44 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response, next:
 export const updateProfile = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 		const data: UpdateProfileRequest = req.body;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Validate input
 		if (!data.name && !data.email) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'At least one field (name or email) is required',
 			});
+			return;
 		}
 
 		// Validate email format if provided
 		if (data.email) {
 			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 			if (!emailRegex.test(data.email)) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: 'Invalid email format',
 				});
+				return;
 			}
 		}
 
 		// TODO: Implement profile update in authService
 		// For now, return current profile
-		const authServiceInstance = new AuthService(prisma);
+		const authServiceInstance = new AuthService(prisma as unknown as any);
 		const profile = await authServiceInstance.getProfile(userId);
 
 		logger.info(`✅ User profile updated: ${userId}`);
@@ -271,7 +292,11 @@ export const updateProfile = async (
 /**
  * Logout controller
  */
-export const logout = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const logout = async (
+	req: AuthenticatedRequest,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const user = req.user;
 
@@ -302,33 +327,36 @@ export const logout = async (req: AuthenticatedRequest, res: Response, next: Nex
 export const changePassword = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 		const data: ChangePasswordRequest = req.body;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		// Validate input
 		if (!data.currentPassword || !data.newPassword) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Current password and new password are required',
 			});
+			return;
 		}
 
 		// Validate new password strength
 		if (data.newPassword.length < 8) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'New password must be at least 8 characters long',
 			});
+			return;
 		}
 
 		// TODO: Implement password change in authService

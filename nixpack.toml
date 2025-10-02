@@ -1,0 +1,11 @@
+[phases.setup]
+nixpacksPlan = 'nodejs_18'
+
+[phases.install]
+nixpacksPlan = 'nodejs_18'
+cmd = 'npm ci'
+
+[phases.build]
+nixpacksPlan = 'nodejs_18'
+cmd = 'npm run build:ts'
+dependsOn = ['install']

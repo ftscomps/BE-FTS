@@ -17,25 +17,28 @@ describe('API Integration Tests', () => {
 		app.use(express.json());
 
 		// Health check endpoint
-		app.get('/health', (req, res) => {
+		app.get('/health', (_req, res) => {
 			res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 		});
 
 		// Mock auth endpoints
-		app.post('/api/auth/register', (req, res) => {
+		app.post('/api/auth/register', (req, res): void => {
 			const { email, password, name } = req.body;
 
 			// Basic validation
 			if (!email || !password || !name) {
-				return res.status(400).json({ error: 'Missing required fields' });
+				res.status(400).json({ error: 'Missing required fields' });
+				return;
 			}
 
 			if (password.length < 6) {
-				return res.status(400).json({ error: 'Password must be at least 6 characters' });
+				res.status(400).json({ error: 'Password must be at least 6 characters' });
+				return;
 			}
 
 			if (!email.includes('@')) {
-				return res.status(400).json({ error: 'Invalid email format' });
+				res.status(400).json({ error: 'Invalid email format' });
+				return;
 			}
 
 			res.status(201).json({
@@ -52,11 +55,12 @@ describe('API Integration Tests', () => {
 			});
 		});
 
-		app.post('/api/auth/login', (req, res) => {
+		app.post('/api/auth/login', (req, res): void => {
 			const { email, password } = req.body;
 
 			if (!email || !password) {
-				return res.status(400).json({ error: 'Email and password are required' });
+				res.status(400).json({ error: 'Email and password are required' });
+				return;
 			}
 
 			if (email === 'test@example.com' && password === 'password123') {
@@ -131,11 +135,12 @@ describe('API Integration Tests', () => {
 			});
 		});
 
-		app.get('/api/projects/:id', (req, res) => {
+		app.get('/api/projects/:id', (req, res): void => {
 			const { id } = req.params;
 
 			if (id === 'nonexistent-project') {
-				return res.status(404).json({ error: 'Project not found' });
+				res.status(404).json({ error: 'Project not found' });
+				return;
 			}
 
 			const mockProject = {
@@ -160,20 +165,23 @@ describe('API Integration Tests', () => {
 			res.status(200).json(mockProject);
 		});
 
-		app.post('/api/projects', (req, res) => {
+		app.post('/api/projects', (req, res): void => {
 			const { title, description, tags } = req.body;
 
 			// Basic validation
 			if (!title || title.length < 3) {
-				return res.status(400).json({ error: 'Title must be at least 3 characters long' });
+				res.status(400).json({ error: 'Title must be at least 3 characters long' });
+				return;
 			}
 
 			if (!description || description.length < 10) {
-				return res.status(400).json({ error: 'Description must be at least 10 characters long' });
+				res.status(400).json({ error: 'Description must be at least 10 characters long' });
+				return;
 			}
 
 			if (!tags || tags.length === 0) {
-				return res.status(400).json({ error: 'At least one tag is required' });
+				res.status(400).json({ error: 'At least one tag is required' });
+				return;
 			}
 
 			const newProject = {
@@ -197,20 +205,23 @@ describe('API Integration Tests', () => {
 			res.status(201).json(newProject);
 		});
 
-		app.put('/api/projects/:id', (req, res) => {
+		app.put('/api/projects/:id', (req, res): void => {
 			const { id } = req.params;
 			const { title, description } = req.body;
 
 			if (id === 'nonexistent-project') {
-				return res.status(404).json({ error: 'Project not found' });
+				res.status(404).json({ error: 'Project not found' });
+				return;
 			}
 
 			if (title && title.length < 3) {
-				return res.status(400).json({ error: 'Title must be at least 3 characters long' });
+				res.status(400).json({ error: 'Title must be at least 3 characters long' });
+				return;
 			}
 
 			if (description && description.length < 10) {
-				return res.status(400).json({ error: 'Description must be at least 10 characters long' });
+				res.status(400).json({ error: 'Description must be at least 10 characters long' });
+				return;
 			}
 
 			const updatedProject = {
@@ -234,11 +245,12 @@ describe('API Integration Tests', () => {
 			res.status(200).json(updatedProject);
 		});
 
-		app.delete('/api/projects/:id', (req, res) => {
+		app.delete('/api/projects/:id', (req, res): void => {
 			const { id } = req.params;
 
 			if (id === 'nonexistent-project') {
-				return res.status(404).json({ error: 'Project not found' });
+				res.status(404).json({ error: 'Project not found' });
+				return;
 			}
 
 			res.status(204).send();

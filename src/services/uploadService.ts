@@ -3,9 +3,9 @@
  * Business logic untuk file upload operations dengan Cloudinary integration
  */
 
-import { promises as fs, existsSync, mkdirSync, readFileSync } from 'fs';
+import { promises as fs, existsSync, mkdirSync } from 'fs';
 import sharp from 'sharp';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import cloudinaryConfig from '../config/cloudinary';
 import {
@@ -16,22 +16,17 @@ import {
 	FileValidationOptions,
 	FileProcessingOptions,
 	ImageTransformationOptions,
-	UploadErrorType,
-	UploadResult,
-	FileMetadata,
 } from '../types/upload';
 
 /**
  * Upload Service class
  */
 export class UploadService {
-	private prisma: PrismaClient;
 	private uploadDir: string;
 	private maxFileSize: number;
 	private allowedMimeTypes: string[];
 
-	constructor(prisma: PrismaClient) {
-		this.prisma = prisma;
+	constructor() {
 		this.uploadDir = process.env['UPLOAD_DIR'] || './uploads';
 		this.maxFileSize = parseInt(process.env['MAX_FILE_SIZE'] || '5242880'); // 5MB
 		this.allowedMimeTypes = process.env['ALLOWED_FILE_TYPES']?.split(',') || [
@@ -160,11 +155,8 @@ export class UploadService {
 			this.validateFile(file);
 
 			// Process image if it's an image
-			let processedBuffer: Buffer;
 			if (file.mimetype.startsWith('image/') && options.processing) {
-				processedBuffer = await this.processImage(file.path, options.processing);
-			} else {
-				processedBuffer = readFileSync(file.path);
+				await this.processImage(file.path, options.processing);
 			}
 
 			// Upload to Cloudinary
@@ -275,21 +267,6 @@ export class UploadService {
 	}
 
 	/**
-	 * Get file metadata
-	 */
-	private getFileMetadata(file: MulterFile): FileMetadata {
-		return {
-			originalName: file.originalname,
-			filename: file.filename,
-			path: file.path,
-			size: file.size,
-			mimeType: file.mimetype,
-			encoding: file.encoding,
-			fieldname: file.fieldname,
-		};
-	}
-
-	/**
 	 * Clean up temporary file
 	 */
 	private async cleanupTempFile(filePath: string): Promise<void> {
@@ -313,21 +290,21 @@ export class UploadService {
 	 * Save file metadata to database
 	 */
 	async saveFileMetadata(
-		metadata: FileMetadata,
+		metadata: MulterFile,
 		cloudinaryData: any,
 		projectId?: string
 	): Promise<any> {
 		try {
 			if (projectId) {
 				// Save to project_images table
-				return await this.prisma.projectImage.create({
+				return await (prisma as any).projectImage.create({
 					data: {
 						projectId,
 						filename: metadata.filename,
-						originalName: metadata.originalName,
+						originalName: metadata.originalname,
 						path: cloudinaryData.url,
 						size: metadata.size,
-						mimeType: metadata.mimeType,
+						mimeType: metadata.mimetype,
 					},
 				});
 			} else {

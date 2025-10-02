@@ -12,7 +12,11 @@ import { CreateProjectRequest, UpdateProjectRequest, ProjectQuery } from '../typ
 /**
  * Get all projects dengan pagination dan filtering
  */
-export const getProjects = async (req: Request, res: Response) => {
+export const getProjects = async (
+	req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		// Parse query parameters
 		const query: ProjectQuery = {};
@@ -46,7 +50,7 @@ export const getProjects = async (req: Request, res: Response) => {
 		}
 
 		// Create service instance
-		const projectService = new ProjectService(require('../config/database').default);
+		const projectService = new ProjectService();
 
 		// Get projects
 		const result = await projectService.getProjects(query);
@@ -63,10 +67,11 @@ export const getProjects = async (req: Request, res: Response) => {
 
 		if (error instanceof Error) {
 			if (error.message.includes('Invalid')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -80,28 +85,34 @@ export const getProjects = async (req: Request, res: Response) => {
 /**
  * Get single project by ID
  */
-export const getProjectById = async (req: Request, res: Response, next: NextFunction) => {
+export const getProjectById = async (
+	req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const { id } = req.params;
 
 		if (!id) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Project ID is required',
 			});
+			return;
 		}
 
 		// Create service instance
-		const projectService = new ProjectService(require('../config/database').default);
+		const projectService = new ProjectService();
 
 		// Get project
 		const project = await projectService.getProjectById(id);
 
 		if (!project) {
-			return res.status(404).json({
+			res.status(404).json({
 				error: 'Not Found',
 				message: 'Project not found',
 			});
+			return;
 		}
 
 		logger.info(`✅ Retrieved project: ${project.title}`);
@@ -127,38 +138,41 @@ export const getProjectById = async (req: Request, res: Response, next: NextFunc
 export const createProject = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		const data: CreateProjectRequest = req.body;
 
 		// Validate input
 		if (!data.title || !data.description || !data.tags) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Title, description, and tags are required',
 			});
+			return;
 		}
 
 		// Validate tags array
 		if (!Array.isArray(data.tags) || data.tags.length === 0) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Tags must be a non-empty array',
 			});
+			return;
 		}
 
 		// Create service instance
-		const projectService = new ProjectService(require('../config/database').default);
+		const projectService = new ProjectService();
 
 		// Create project
 		const newProject = await projectService.createProject(data, userId);
@@ -175,16 +189,18 @@ export const createProject = async (
 
 		if (error instanceof Error) {
 			if (error.message.includes('required') || error.message.includes('must be')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 			if (error.message.includes('already exists')) {
-				return res.status(409).json({
+				res.status(409).json({
 					error: 'Conflict',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -201,38 +217,41 @@ export const createProject = async (
 export const updateProject = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 		const { id } = req.params;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		if (!id) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Project ID is required',
 			});
+			return;
 		}
 
 		const data: UpdateProjectRequest = req.body;
 
 		// Validate that at least one field is provided
 		if (Object.keys(data).length === 0) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'At least one field must be provided for update',
 			});
+			return;
 		}
 
 		// Create service instance
-		const projectService = new ProjectService(require('../config/database').default);
+		const projectService = new ProjectService();
 
 		// Update project
 		const updatedProject = await projectService.updateProject(id, data, userId);
@@ -249,16 +268,18 @@ export const updateProject = async (
 
 		if (error instanceof Error) {
 			if (error.message.includes('not found')) {
-				return res.status(404).json({
+				res.status(404).json({
 					error: 'Not Found',
 					message: error.message,
 				});
+				return;
 			}
 			if (error.message.includes('required') || error.message.includes('must be')) {
-				return res.status(400).json({
+				res.status(400).json({
 					error: 'Bad Request',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -275,28 +296,30 @@ export const updateProject = async (
 export const deleteProject = async (
 	req: AuthenticatedRequest,
 	res: Response,
-	next: NextFunction
-) => {
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const userId = req.user?.id;
 		const { id } = req.params;
 
 		if (!userId) {
-			return res.status(401).json({
+			res.status(401).json({
 				error: 'Unauthorized',
 				message: 'User not authenticated',
 			});
+			return;
 		}
 
 		if (!id) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Project ID is required',
 			});
+			return;
 		}
 
 		// Create service instance
-		const projectService = new ProjectService(require('../config/database').default);
+		const projectService = new ProjectService();
 
 		// Delete project
 		await projectService.deleteProject(id, userId);
@@ -312,10 +335,11 @@ export const deleteProject = async (
 
 		if (error instanceof Error) {
 			if (error.message.includes('not found')) {
-				return res.status(404).json({
+				res.status(404).json({
 					error: 'Not Found',
 					message: error.message,
 				});
+				return;
 			}
 		}
 
@@ -329,10 +353,14 @@ export const deleteProject = async (
 /**
  * Get project statistics
  */
-export const getProjectStats = async (req: Request, res: Response, next: NextFunction) => {
+export const getProjectStats = async (
+	_req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		// Create service instance
-		const projectService = new ProjectService(require('../config/database').default);
+		const projectService = new ProjectService();
 
 		// Get statistics
 		const stats = await projectService.getProjectStats();
@@ -357,28 +385,34 @@ export const getProjectStats = async (req: Request, res: Response, next: NextFun
 /**
  * Get project images
  */
-export const getProjectImages = async (req: Request, res: Response, next: NextFunction) => {
+export const getProjectImages = async (
+	req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
 	try {
 		const { id } = req.params;
 
 		if (!id) {
-			return res.status(400).json({
+			res.status(400).json({
 				error: 'Bad Request',
 				message: 'Project ID is required',
 			});
+			return;
 		}
 
 		// Create service instance
-		const projectService = new ProjectService(require('../config/database').default);
+		const projectService = new ProjectService();
 
 		// Get project with images
 		const project = await projectService.getProjectById(id);
 
 		if (!project) {
-			return res.status(404).json({
+			res.status(404).json({
 				error: 'Not Found',
 				message: 'Project not found',
 			});
+			return;
 		}
 
 		logger.info(`✅ Retrieved ${project.images.length} images for project: ${id}`);

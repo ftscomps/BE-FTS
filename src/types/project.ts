@@ -10,9 +10,9 @@ export interface Project {
 	id: string;
 	title: string;
 	description: string;
-	imageUrl?: string;
-	liveUrl?: string;
-	githubUrl?: string;
+	imageUrl: string | null;
+	liveUrl: string | null;
+	githubUrl: string | null;
 	tags: string[];
 	createdBy: string;
 	createdAt: Date;
@@ -58,9 +58,9 @@ export interface ProjectImage {
 export interface CreateProjectRequest {
 	title: string;
 	description: string;
-	imageUrl?: string;
-	liveUrl?: string;
-	githubUrl?: string;
+	imageUrl?: string | null;
+	liveUrl?: string | null;
+	githubUrl?: string | null;
 	tags: string[];
 }
 
@@ -70,9 +70,9 @@ export interface CreateProjectRequest {
 export interface UpdateProjectRequest {
 	title?: string;
 	description?: string;
-	imageUrl?: string;
-	liveUrl?: string;
-	githubUrl?: string;
+	imageUrl?: string | null;
+	liveUrl?: string | null;
+	githubUrl?: string | null;
 	tags?: string[];
 }
 
