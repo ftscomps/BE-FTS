@@ -12,7 +12,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install all dependencies (including devDependencies)
-RUN npm ci
+RUN npm ci --omit=dev
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -39,6 +39,9 @@ COPY --from=builder /app/prisma ./prisma
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
+
+# Copy healthcheck script
+COPY --from=builder /app/src/healthcheck.ts ./dist/
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs

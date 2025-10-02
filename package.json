@@ -4,7 +4,7 @@
 	"description": "Fujiyama Technology Solutions Backend API - RESTful API untuk admin dashboard dan project management",
 	"main": "dist/server.js",
 	"scripts": {
-		"build": "npm run prisma:generate && npm run prisma:deploy && npm run build:ts",
+		"build": "npm run build:ts",
 		"build:ts": "tsc",
 		"start": "node dist/server.js",
 		"dev": "nodemon src/server.ts",
@@ -19,7 +19,7 @@
 		"prisma:studio": "prisma studio",
 		"lint": "eslint src/**/*.ts",
 		"lint:fix": "eslint src/**/*.ts --fix",
-		"postinstall": "npm run prisma:generate"
+		"postinstall": "npm run prisma:generate || true"
 	},
 	"repository": {
 		"type": "git",
