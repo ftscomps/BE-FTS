@@ -1,11 +1,25 @@
+# Nixpacks Configuration untuk FTS Backend API
+# Optimal untuk TypeScript + Node.js project
+
 [phases.setup]
 nixpacksPlan = 'nodejs_18'
 
 [phases.install]
 nixpacksPlan = 'nodejs_18'
-cmd = 'npm ci'
+# Use npm ci untuk production builds (faster dan lebih reliable)
+cmd = 'npm ci --omit=dev'
 
 [phases.build]
 nixpacksPlan = 'nodejs_18'
+# Build TypeScript ke JavaScript
 cmd = 'npm run build:ts'
+# Build harus selesai setelah install selesai
 dependsOn = ['install']
+
+# Start phase untuk production
+[phases.start]
+nixpacksPlan = 'nodejs_18'
+# Start command yang sudah ada di package.json
+cmd = 'npm start'
+# Start harus selesai setelah build selesai
+dependsOn = ['build']
