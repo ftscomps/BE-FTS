@@ -48,14 +48,14 @@ const router = Router();
  * @desc    Upload single image file
  * @access  Private
  */
-router.post('/single', requireAuth, upload.single('file'), uploadController.uploadSingle);
+router.post('/single', requireAuth, upload.single('image'), uploadController.uploadSingle);
 
 /**
  * @route   POST /api/upload/multiple
  * @desc    Upload multiple image files
  * @access  Private
  */
-router.post('/multiple', requireAuth, uploadMultiple.array('files', 10), (req, res, next) =>
+router.post('/multiple', requireAuth, uploadMultiple.array('images', 10), (req, res, next) =>
 	uploadController.uploadMultiple(req as any, res, next)
 );
 
