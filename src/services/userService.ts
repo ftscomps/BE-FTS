@@ -36,10 +36,10 @@ export class UserService {
 			required: true,
 		},
 		password: {
-			minLength: 8,
+			minLength: 6,
 			maxLength: 100,
 			required: true,
-			pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+			pattern: /^(?=.*[a-zA-Z0-9]).{6,}$/,
 		},
 		role: {
 			required: true,
@@ -98,7 +98,7 @@ export class UserService {
 			}
 			if (data.password && !this.validationRules.password.pattern.test(data.password)) {
 				throw new Error(
-					'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+					'Password must be at least 6 characters long and contain only letters and numbers'
 				);
 			}
 		}
@@ -234,6 +234,136 @@ export class UserService {
 			};
 		} catch (error) {
 			logger.error('❌ Get users error:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get all users (for admin)
+	 */
+	async getAllUsers(): Promise<User[]> {
+		try {
+			const users = await (prisma as any).user.findMany({
+				include: {
+					_count: {
+						select: { projects: true },
+					},
+				},
+				orderBy: { createdAt: 'desc' },
+			});
+
+			// Transform users to match expected format
+			return users.map((user: any) => ({
+				id: user.id,
+				email: user.email,
+				name: user.name,
+				role: user.role,
+				createdAt: user.createdAt,
+				updatedAt: user.updatedAt,
+				lastLoginAt: user.lastLoginAt || null,
+				isActive: true, // Assuming all users are active
+				projectsCount: user._count.projects,
+			}));
+		} catch (error) {
+			logger.error('❌ Get all users error:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get activity logs (for admin)
+	 */
+	async getActivityLogs(options: {
+		page: number;
+		limit: number;
+		action?: string;
+		resourceType?: string;
+	}): Promise<{ logs: any[] }> {
+		try {
+			const { page, limit, action, resourceType } = options;
+			const skip = (page - 1) * limit;
+
+			// Build where clause
+			const where: any = {};
+			if (action) where.action = action;
+			if (resourceType) where.resourceType = resourceType;
+
+			// Get activity logs with user information
+			const logs = await (prisma as any).activityLog.findMany({
+				where,
+				include: {
+					user: {
+						select: {
+							id: true,
+							name: true,
+							email: true,
+						},
+					},
+				},
+				orderBy: { createdAt: 'desc' },
+				skip,
+				take: limit,
+			});
+
+			// Transform logs to match expected format
+			const transformedLogs = logs.map((log: any) => ({
+				id: log.id,
+				userId: log.userId,
+				userName: log.user?.name || 'Unknown',
+				userEmail: log.user?.email || 'unknown@example.com',
+				action: log.action,
+				resourceType: log.resourceType,
+				resourceId: log.resourceId,
+				resourceName: log.details?.title || 'Unknown',
+				details: log.details,
+				ipAddress: log.ipAddress,
+				userAgent: log.userAgent,
+				createdAt: log.createdAt,
+			}));
+
+			return { logs: transformedLogs };
+		} catch (error) {
+			logger.error('❌ Get activity logs error:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get recent activity (for admin dashboard)
+	 */
+	async getRecentActivity(): Promise<any[]> {
+		try {
+			const recentActivities = await (prisma as any).activityLog.findMany({
+				take: 15,
+				include: {
+					user: {
+						select: {
+							id: true,
+							name: true,
+							email: true,
+						},
+					},
+				},
+				orderBy: { createdAt: 'desc' },
+			});
+
+			// Transform activities to match expected format
+			return recentActivities.map((activity: any) => ({
+				id: activity.id,
+				userId: activity.userId,
+				userName: activity.user?.name || 'Unknown',
+				userEmail: activity.user?.email || 'unknown@example.com',
+				action: activity.action,
+				resourceType: activity.resourceType,
+				resourceId: activity.resourceId,
+				resourceName: activity.details?.title || 'Unknown',
+				details: activity.details,
+				ipAddress: activity.ipAddress,
+				userAgent: activity.userAgent,
+				createdAt: activity.createdAt,
+			}));
+		} catch (error) {
+			logger.error('❌ Get recent activity error:', error);
 			throw error;
 		}
 	}

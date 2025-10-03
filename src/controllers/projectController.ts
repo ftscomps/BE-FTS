@@ -57,10 +57,10 @@ export const getProjects = async (
 
 		logger.info(`✅ Retrieved ${result.projects.length} projects`);
 
+		// Return only the projects array for frontend compatibility
 		res.json({
 			success: true,
-			message: 'Projects retrieved successfully',
-			data: result,
+			data: result.projects,
 		});
 	} catch (error) {
 		logger.error('❌ Get projects controller error:', error);
@@ -119,7 +119,6 @@ export const getProjectById = async (
 
 		res.json({
 			success: true,
-			message: 'Project retrieved successfully',
 			data: project,
 		});
 	} catch (error) {
@@ -181,7 +180,6 @@ export const createProject = async (
 
 		res.status(201).json({
 			success: true,
-			message: 'Project created successfully',
 			data: newProject,
 		});
 	} catch (error) {
@@ -260,7 +258,6 @@ export const updateProject = async (
 
 		res.json({
 			success: true,
-			message: 'Project updated successfully',
 			data: updatedProject,
 		});
 	} catch (error) {
@@ -369,7 +366,6 @@ export const getProjectStats = async (
 
 		res.json({
 			success: true,
-			message: 'Project statistics retrieved successfully',
 			data: stats,
 		});
 	} catch (error) {
@@ -419,7 +415,6 @@ export const getProjectImages = async (
 
 		res.json({
 			success: true,
-			message: 'Project images retrieved successfully',
 			data: project.images,
 		});
 	} catch (error) {

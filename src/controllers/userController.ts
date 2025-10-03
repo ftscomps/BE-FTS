@@ -77,8 +77,7 @@ export const getUsers = async (
 
 		res.json({
 			success: true,
-			message: 'Users retrieved successfully',
-			data: result,
+			data: result.users,
 		});
 	} catch (error) {
 		logger.error('❌ Get users controller error:', error);
@@ -158,7 +157,6 @@ export const getUserById = async (
 
 		res.json({
 			success: true,
-			message: 'User retrieved successfully',
 			data: userWithoutPassword,
 		});
 	} catch (error) {
@@ -220,7 +218,6 @@ export const createUser = async (
 
 		res.status(201).json({
 			success: true,
-			message: 'User created successfully',
 			data: newUser,
 		});
 	} catch (error) {
@@ -310,7 +307,6 @@ export const updateUser = async (
 
 		res.json({
 			success: true,
-			message: 'User updated successfully',
 			data: updatedUser,
 		});
 	} catch (error) {
@@ -457,7 +453,6 @@ export const getUserStats = async (
 
 		res.json({
 			success: true,
-			message: 'User statistics retrieved successfully',
 			data: stats,
 		});
 	} catch (error) {
@@ -582,7 +577,6 @@ export const getUserProfile = async (
 
 		res.json({
 			success: true,
-			message: 'User profile retrieved successfully',
 			data: profile,
 		});
 	} catch (error) {
@@ -614,7 +608,6 @@ export const getUserValidationRules = async (
 
 		res.json({
 			success: true,
-			message: 'User validation rules retrieved successfully',
 			data: rules,
 		});
 	} catch (error) {

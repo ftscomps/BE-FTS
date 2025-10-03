@@ -59,10 +59,13 @@ export const uploadSingle = async (
 
 		logger.info(`✅ File uploaded by user ${userId}: ${result.data.publicId}`);
 
+		// Transform response to match frontend expectations
 		res.status(201).json({
 			success: true,
-			message: 'File uploaded successfully',
-			data: result,
+			data: {
+				url: result.data.secureUrl,
+				filename: result.data.publicId,
+			},
 		});
 	} catch (error) {
 		logger.error('❌ Single file upload controller error:', error);
@@ -129,10 +132,15 @@ export const uploadMultiple = async (
 			`✅ Multiple files uploaded by user ${userId}: ${result.uploaded} successful, ${result.failed} failed`
 		);
 
+		// Transform response to match frontend expectations
+		const transformedData = result.data.map((file: any) => ({
+			url: file.secureUrl,
+			filename: file.publicId,
+		}));
+
 		res.status(201).json({
 			success: true,
-			message: result.message,
-			data: result,
+			data: transformedData,
 		});
 	} catch (error) {
 		logger.error('❌ Multiple files upload controller error:', error);
@@ -176,14 +184,13 @@ export const deleteFile = async (
 		const uploadService = new UploadService();
 
 		// Delete file
-		const result = await uploadService.deleteFile(publicId);
+		await uploadService.deleteFile(publicId);
 
 		logger.info(`✅ File deleted by user ${userId}: ${publicId}`);
 
 		res.json({
 			success: true,
 			message: 'File deleted successfully',
-			data: result,
 		});
 	} catch (error) {
 		logger.error('❌ File delete controller error:', error);
@@ -257,10 +264,9 @@ export const getFileUrl = async (
 
 		res.json({
 			success: true,
-			message: 'File URL generated successfully',
 			data: {
-				publicId,
 				url,
+				filename: publicId,
 			},
 		});
 	} catch (error) {
@@ -292,7 +298,6 @@ export const getUploadConfig = async (
 
 		res.json({
 			success: true,
-			message: 'Upload configuration retrieved successfully',
 			data: config,
 		});
 	} catch (error) {

@@ -19,6 +19,7 @@ import projectRoutes from './routes/projects';
 import uploadRoutes from './routes/upload';
 import activityRoutes from './routes/activity';
 import userRoutes from './routes/users';
+import adminRoutes from './routes/admin';
 import healthRoutes from './routes/health';
 
 // Import middleware
@@ -103,6 +104,7 @@ app.use(`${API_PREFIX}/projects`, projectRoutes);
 app.use(`${API_PREFIX}/upload`, uploadRoutes);
 app.use(`${API_PREFIX}/activity`, activityRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
+app.use(`${API_PREFIX}/admin`, adminRoutes);
 
 // Temporary root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -125,6 +127,7 @@ app.get(API_PREFIX, (_req: Request, res: Response) => {
 			auth: `${API_PREFIX}/auth`,
 			projects: `${API_PREFIX}/projects`,
 			upload: `${API_PREFIX}/upload`,
+			users: `${API_PREFIX}/users`,
 			admin: `${API_PREFIX}/admin`,
 		},
 		documentation: `${API_PREFIX}/docs`,
@@ -149,6 +152,7 @@ app.use((req: Request, res: Response, _next: NextFunction) => {
 			`${API_PREFIX}/upload`,
 			`${API_PREFIX}/activity`,
 			`${API_PREFIX}/users`,
+			`${API_PREFIX}/admin`,
 		],
 	});
 });

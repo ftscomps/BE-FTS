@@ -73,8 +73,7 @@ export const getActivityLogs = async (
 
 		res.json({
 			success: true,
-			message: 'Activity logs retrieved successfully',
-			data: result,
+			data: result.logs,
 		});
 	} catch (error) {
 		logger.error('❌ Get activity logs controller error:', error);
@@ -141,7 +140,6 @@ export const getActivityStats = async (
 
 		res.json({
 			success: true,
-			message: 'Activity statistics retrieved successfully',
 			data: stats,
 		});
 	} catch (error) {
@@ -238,8 +236,7 @@ export const getUserActivityLogs = async (
 
 		res.json({
 			success: true,
-			message: 'User activity logs retrieved successfully',
-			data: result,
+			data: result.logs,
 		});
 	} catch (error) {
 		logger.error('❌ Get user activity logs controller error:', error);
@@ -325,7 +322,6 @@ export const getUserActivityStats = async (
 
 		res.json({
 			success: true,
-			message: 'User activity statistics retrieved successfully',
 			data: stats,
 		});
 	} catch (error) {

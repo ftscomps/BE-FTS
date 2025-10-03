@@ -59,7 +59,6 @@ export const register = async (req: Request, res: Response, _next: NextFunction)
 
 		res.status(201).json({
 			success: true,
-			message: 'User registered successfully',
 			data: result,
 		});
 	} catch (error) {
@@ -106,7 +105,6 @@ export const login = async (req: Request, res: Response, _next: NextFunction): P
 
 		res.json({
 			success: true,
-			message: 'Login successful',
 			data: result,
 		});
 	} catch (error) {
@@ -155,7 +153,6 @@ export const refreshToken = async (
 
 		res.json({
 			success: true,
-			message: 'Token refreshed successfully',
 			data: result,
 		});
 	} catch (error) {
@@ -203,7 +200,6 @@ export const getProfile = async (
 
 		res.json({
 			success: true,
-			message: 'Profile retrieved successfully',
 			data: profile,
 		});
 	} catch (error) {
@@ -276,7 +272,6 @@ export const updateProfile = async (
 
 		res.json({
 			success: true,
-			message: 'Profile updated successfully',
 			data: profile,
 		});
 	} catch (error) {
