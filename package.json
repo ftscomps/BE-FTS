@@ -4,6 +4,7 @@
 	"description": "Fujiyama Technology Solutions Backend API - RESTful API untuk admin dashboard dan project management",
 	"main": "dist/server.js",
 	"scripts": {
+		"prestart": "npm run build",
 		"build": "npm run build:ts",
 		"build:ts": "tsc",
 		"start": "node dist/server.js",
