@@ -23,6 +23,7 @@ model User {
   // Relations
   projects     Project[]
   activityLogs ActivityLog[]
+  blogs        Blog[]
 
   @@map("users")
 }
@@ -80,4 +81,91 @@ model ActivityLog {
   user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("activity_logs")
+}
+
+// Blog Management System Tables
+
+// Categories untuk blog categories
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  blogs      Blog[]
+
+  @@map("categories")
+}
+
+// Tags untuk blog tags
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  blogs     BlogTag[]
+
+  @@map("tags")
+}
+
+// Main blog table
+model Blog {
+  id             String    @id @default(uuid())
+  title          String
+  slug           String    @unique
+  excerpt        String
+  content        String
+  categoryId     String    @map("category_id")
+  featuredImage  String?   @map("featured_image")
+  isPublished    Boolean   @default(false) @map("is_published")
+  readTime       Int       @default(0) @map("read_time")
+  views          Int       @default(0)
+  authorId       String    @map("author_id")
+  seoTitle       String?   @map("seo_title")
+  seoDescription String?   @map("seo_description")
+  seoKeywords    String?   @map("seo_keywords")
+  publishedAt    DateTime? @map("published_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags       BlogTag[]
+  blogViews  BlogView[]
+
+  @@map("blogs")
+}
+
+// Many-to-many relationship between blogs and tags
+model BlogTag {
+  blogId    String @map("blog_id")
+  tagId     String @map("tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  blog      Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag       Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+  @@map("blog_tags")
+}
+
+// Blog views untuk detailed analytics
+model BlogView {
+  id        String   @id @default(uuid())
+  blogId    String   @map("blog_id")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  viewedAt  DateTime @default(now()) @map("viewed_at")
+
+  // Relations
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@map("blog_views")
 }

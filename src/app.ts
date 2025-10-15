@@ -21,6 +21,10 @@ import activityRoutes from './routes/activity';
 import userRoutes from './routes/users';
 import adminRoutes from './routes/admin';
 import healthRoutes from './routes/health';
+// Blog Management System routes
+import blogRoutes from './routes/blogs';
+import categoryRoutes from './routes/categories';
+import tagRoutes from './routes/tags';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -105,6 +109,10 @@ app.use(`${API_PREFIX}/upload`, uploadRoutes);
 app.use(`${API_PREFIX}/activity`, activityRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/admin`, adminRoutes);
+// Blog Management System routes
+app.use(`${API_PREFIX}/blogs`, blogRoutes);
+app.use(`${API_PREFIX}/categories`, categoryRoutes);
+app.use(`${API_PREFIX}/tags`, tagRoutes);
 
 // Temporary root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -129,6 +137,9 @@ app.get(API_PREFIX, (_req: Request, res: Response) => {
 			upload: `${API_PREFIX}/upload`,
 			users: `${API_PREFIX}/users`,
 			admin: `${API_PREFIX}/admin`,
+			blogs: `${API_PREFIX}/blogs`,
+			categories: `${API_PREFIX}/categories`,
+			tags: `${API_PREFIX}/tags`,
 		},
 		documentation: `${API_PREFIX}/docs`,
 		health: '/health',
@@ -153,6 +164,9 @@ app.use((req: Request, res: Response, _next: NextFunction) => {
 			`${API_PREFIX}/activity`,
 			`${API_PREFIX}/users`,
 			`${API_PREFIX}/admin`,
+			`${API_PREFIX}/blogs`,
+			`${API_PREFIX}/categories`,
+			`${API_PREFIX}/tags`,
 		],
 	});
 });

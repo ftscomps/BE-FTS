@@ -110,3 +110,5 @@ uploads/
 
 # Railway
 railway.toml
+
+.cursor
