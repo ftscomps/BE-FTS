@@ -123,6 +123,7 @@ export interface CreateBlogRequest {
   categoryId: string;
   featuredImage?: string | null;
   isPublished?: boolean;
+  publishedAt?: string | Date; // Optional, untuk set custom publish date (ISO string atau Date object)
   tags: string[]; // Array of tag names
   seoTitle?: string | null;
   seoDescription?: string | null;

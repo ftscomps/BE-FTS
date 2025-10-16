@@ -254,6 +254,23 @@ export class BlogService {
 			// Create or find tags
 			const tagConnections = await this.createOrFindTags(data.tags);
 
+			// Determine publishedAt value
+			// Priority: 1) Custom publishedAt from frontend, 2) NOW() if published, 3) null if draft
+			let publishedAt: Date | null = null;
+			if (data.isPublished) {
+				if (data.publishedAt) {
+					// Frontend provides custom date - validate dan gunakan
+					publishedAt = new Date(data.publishedAt);
+					// Validate bukan epoch 0 atau invalid date
+					if (isNaN(publishedAt.getTime()) || publishedAt.getTime() === 0) {
+						publishedAt = new Date(); // Fallback to now
+					}
+				} else {
+					// Auto-set to current date
+					publishedAt = new Date();
+				}
+			}
+
 			// Create blog
 			const newBlog = await (prisma as any).blog.create({
 				data: {
@@ -266,7 +283,7 @@ export class BlogService {
 					isPublished: data.isPublished || false,
 					readTime,
 					authorId,
-					publishedAt: data.isPublished ? new Date() : null,
+					publishedAt,
 					...seoFields,
 					tags: {
 						create: tagConnections,
@@ -476,6 +493,20 @@ export class BlogService {
 
 			if (!blog) {
 				return null;
+			}
+
+			// Validate publishedAt untuk published blogs
+			// Ensure tidak return epoch 0 (Jan 1, 1970) atau invalid date
+			if (blog.isPublished && blog.publishedAt) {
+				const publishedDate = new Date(blog.publishedAt);
+				// Check jika invalid date atau epoch 0
+				if (isNaN(publishedDate.getTime()) || publishedDate.getFullYear() === 1970) {
+					// Fallback to createdAt jika publishedAt invalid
+					blog.publishedAt = blog.createdAt;
+				}
+			} else if (blog.isPublished && !blog.publishedAt) {
+				// Published blog MUST have publishedAt - fallback to createdAt
+				blog.publishedAt = blog.createdAt;
 			}
 
 			// Transform tags structure

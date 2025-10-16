@@ -46,6 +46,13 @@ router.get('/:id', blogController.getBlogById);
  */
 router.get('/:id/related', blogController.getRelatedBlogs);
 
+/**
+ * @route   POST /api/blogs/:id/view
+ * @desc    Track blog view - increment view counter dan store view analytics
+ * @access  Public (no auth needed untuk tracking)
+ */
+router.post('/:id/view', blogController.trackBlogView);
+
 // Admin Blog Routes
 
 /**

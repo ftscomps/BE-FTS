@@ -666,3 +666,54 @@ export const getAdminBlogs = async (
 		});
 	}
 };
+
+/**
+ * Track blog view (Public)
+ * Increment view counter dan store analytics data (IP, User-Agent)
+ * Called saat user membaca blog untuk tracking engagement
+ */
+export const trackBlogView = async (
+	req: Request,
+	res: Response,
+	_next: NextFunction
+): Promise<void> => {
+	try {
+		const { id } = req.params;
+
+		if (!id) {
+			res.status(400).json({
+				error: 'Bad Request',
+				message: 'Blog ID is required',
+			});
+			return;
+		}
+
+		// Create service instance
+		const blogService = new BlogService();
+
+		// Verify blog exists sebelum track view
+		const blog = await blogService.getBlogById(id);
+		if (!blog) {
+			res.status(404).json({
+				error: 'Not Found',
+				message: 'Blog not found',
+			});
+			return;
+		}
+
+		// Track view - increment counter dan store analytics
+		// Silent fail jika tracking gagal (tidak interrupt UX)
+		await blogService.trackView(blog.id, req.ip, req.get('User-Agent'));
+
+		logger.info(`✅ Blog view tracked: ${blog.title}`);
+
+		// Return 204 No Content (standard untuk tracking endpoints)
+		res.status(204).send();
+	} catch (error) {
+		logger.error('❌ Track blog view error:', error);
+
+		// Even on error, return success untuk tidak interrupt frontend
+		// View tracking adalah non-critical operation
+		res.status(204).send();
+	}
+};
