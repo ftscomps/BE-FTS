@@ -42,8 +42,8 @@ model Project {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  creator     User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  images      ProjectImage[]
+  creator User           @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  images  ProjectImage[]
 
   @@map("projects")
 }
@@ -60,7 +60,7 @@ model ProjectImage {
   createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations
-  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("project_images")
 }
@@ -78,7 +78,7 @@ model ActivityLog {
   createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations
-  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("activity_logs")
 }
@@ -95,7 +95,7 @@ model Category {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  blogs      Blog[]
+  blogs Blog[]
 
   @@map("categories")
 }
@@ -108,12 +108,12 @@ model Tag {
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
-  blogs     BlogTag[]
+  blogs BlogTag[]
 
   @@map("tags")
 }
 
-// Main blog table
+// Main blog table dengan performance indexes
 model Blog {
   id             String    @id @default(uuid())
   title          String
@@ -134,25 +134,37 @@ model Blog {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  tags       BlogTag[]
-  blogViews  BlogView[]
+  category  Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags      BlogTag[]
+  blogViews BlogView[]
 
+  // Performance indexes untuk query optimization
+  @@index([categoryId]) // For category filtering
+  @@index([authorId]) // For author filtering
+  @@index([isPublished]) // For published filtering
+  @@index([publishedAt]) // For date sorting
+  @@index([views]) // For popularity sorting
+  @@index([createdAt]) // For latest sorting
+  @@index([isPublished, publishedAt]) // Composite index untuk common query
+  @@index([isPublished, createdAt]) // Composite index untuk published + latest
+  @@index([categoryId, isPublished]) // Composite index untuk category + published
   @@map("blogs")
 }
 
-// Many-to-many relationship between blogs and tags
+// Many-to-many relationship between blogs and tags dengan performance indexes
 model BlogTag {
-  blogId    String @map("blog_id")
-  tagId     String @map("tag_id")
+  blogId    String   @map("blog_id")
+  tagId     String   @map("tag_id")
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
-  blog      Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
-  tag       Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([blogId, tagId])
+  @@index([tagId]) // Performance index untuk reverse lookup (find blogs by tag)
+  @@index([blogId]) // Performance index untuk find tags by blog
   @@map("blog_tags")
 }
 
@@ -165,7 +177,7 @@ model BlogView {
   viewedAt  DateTime @default(now()) @map("viewed_at")
 
   // Relations
-  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
 
   @@map("blog_views")
 }

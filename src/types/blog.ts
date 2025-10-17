@@ -164,6 +164,8 @@ export interface BlogQuery {
 
 /**
  * Blog response dengan pagination
+ * PERFORMANCE NOTE: filters removed from this response untuk optimization
+ * Filters should be fetched separately via /blogs/filters endpoint
  */
 export interface BlogListResponse {
   blogs: BlogWithRelations[];
@@ -175,7 +177,7 @@ export interface BlogListResponse {
     hasNext: boolean;
     hasPrev: boolean;
   };
-  filters: {
+  filters?: {  // Optional - removed for performance
     categories: Category[];
     tags: Tag[];
   };
@@ -260,12 +262,13 @@ export interface PublishBlogRequest {
 
 /**
  * Blog search result
+ * PERFORMANCE NOTE: filters removed untuk optimization
  */
 export interface BlogSearchResult {
   blogs: BlogWithRelations[];
   total: number;
   query: string;
-  filters: {
+  filters?: {  // Optional - removed for performance
     categories: Category[];
     tags: Tag[];
   };
