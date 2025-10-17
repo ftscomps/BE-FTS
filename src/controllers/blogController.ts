@@ -220,14 +220,16 @@ export const getRelatedBlogs = async (
 		// Create service instance
 		const blogService = new BlogService();
 
-		// Get related blogs
+		// Get related blogs dari service (returns object dengan blogs array)
 		const result = await blogService.getRelatedBlogs(id, limit ? parseInt(limit as string) : 3);
 
 		logger.info(`✅ Retrieved ${result.blogs.length} related blogs for blog: ${id}`);
 
+		// Frontend expects array directly in data field (not nested object)
+		// Return blogs array directly untuk compatibility dengan frontend
 		res.json({
 			success: true,
-			data: result,
+			data: result.blogs || [],  // Return array directly, empty array if no blogs
 		});
 	} catch (error) {
 		logger.error('❌ Get related blogs controller error:', error);

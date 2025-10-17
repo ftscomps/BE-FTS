@@ -749,17 +749,22 @@ export class BlogService {
 	}
 
 	/**
-	 * Track blog view
+	 * Track blog view - increment view counter dan store analytics data
 	 */
 	async trackView(blogId: string, ipAddress?: string, userAgent?: string): Promise<void> {
 		try {
-			// Increment view count
-			await (prisma as any).blog.increment({
+			// Increment view count menggunakan Prisma update dengan increment operator
+			// NOTE: Prisma tidak punya method .increment() - harus pakai .update() dengan { increment: 1 }
+			await (prisma as any).blog.update({
 				where: { id: blogId },
-				data: { views: 1 },
+				data: {
+					views: {
+						increment: 1,  // Increment views by 1
+					},
+				},
 			});
 
-			// Store detailed view data
+			// Store detailed view data untuk analytics
 			await (prisma as any).blogView.create({
 				data: {
 					blogId,
@@ -767,9 +772,11 @@ export class BlogService {
 					userAgent,
 				},
 			});
+
+			logger.info(`✅ View tracked for blog: ${blogId}`);
 		} catch (error) {
 			logger.error('❌ Track view error:', error);
-			// Don't throw error for view tracking
+			// Don't throw error for view tracking - non-critical feature
 		}
 	}
 
