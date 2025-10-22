@@ -1,18 +1,24 @@
 # Nixpacks Configuration untuk FTS Backend API
-# Optimal untuk TypeScript + Node.js project
+# Optimal untuk TypeScript + Prisma + Node.js project
 
 [phases.setup]
 nixpacksPlan = 'nodejs_18'
 
+# Install phase - install ALL dependencies (termasuk devDependencies untuk build)
 [phases.install]
 nixpacksPlan = 'nodejs_18'
-# Use npm ci untuk production builds (faster dan lebih reliable)
-cmd = 'npm ci --omit=dev'
+# Install semua dependencies untuk build process
+# TypeScript dan dev tools diperlukan untuk compile
+cmd = 'npm ci'
 
+# Build phase - generate Prisma Client, run migrations, build TypeScript
 [phases.build]
 nixpacksPlan = 'nodejs_18'
-# Build TypeScript ke JavaScript
-cmd = 'npm run build:ts'
+# Sequential build commands:
+# 1. Generate Prisma Client dengan DATABASE_URL production
+# 2. Run database migrations (safe untuk production)
+# 3. Build TypeScript ke JavaScript
+cmd = 'npx prisma generate && npx prisma migrate deploy && npm run build:ts'
 # Build harus selesai setelah install selesai
 dependsOn = ['install']
 

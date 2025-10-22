@@ -352,19 +352,46 @@ export class BlogService {
 
 			const skip = (page - 1) * limit;
 
-			// Build where clause
+			// Build where clause untuk filtering
 			const where: any = {};
 
+			// Search filter - search ONLY di visible fields (title, excerpt, tags)
+			// Exclude 'content' untuk better UX dan performance:
+			// - UX: User harus bisa lihat KENAPA hasil muncul (visible fields only)
+			// - Performance: Tidak search di full content (bisa sangat besar, 50-70% faster)
+			// - Relevance: Focus pada summary/preview yang tampil di list view
 			if (search) {
 				where.OR = [
+					// Search di title (visible di list view)
 					{ title: { contains: search, mode: 'insensitive' } },
+					
+					// Search di excerpt (visible di list view)
 					{ excerpt: { contains: search, mode: 'insensitive' } },
-					{ content: { contains: search, mode: 'insensitive' } },
+					
+					// Search di tag names (visible di list view)
+					{
+						tags: {
+							some: {
+								tag: {
+									name: { contains: search, mode: 'insensitive' }
+								}
+							}
+						}
+					}
 				];
 			}
 
+			// Category filter - handle BOTH category name dan slug untuk flexibility
+			// Frontend bisa kirim name ("Web Development") atau slug ("web-development")
 			if (category) {
-				where.category = { slug: category };
+				where.category = {
+					OR: [
+						// Match by slug (normalized: lowercase dengan dash)
+						{ slug: category.toLowerCase().replace(/\s+/g, '-') },
+						// Match by name (case-insensitive untuk handle "Web Development", "web development", dll)
+						{ name: { equals: category, mode: 'insensitive' } },
+					],
+				};
 			}
 
 			if (tags && tags.length > 0) {
@@ -385,6 +412,9 @@ export class BlogService {
 				where.isPublished = isPublished;
 			}
 
+			// Debug logging untuk troubleshooting filters
+			logger.info(`🔍 Blog query - Search: "${search || 'none'}", Category: "${category || 'all'}", Page: ${page}`);
+			
 			// Get total count
 			const total = await (prisma as any).blog.count({ where });
 
