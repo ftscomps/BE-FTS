@@ -915,20 +915,56 @@ export class BlogService {
 				}),
 			]);
 
-			// Process statistics
+			// Process statistics dengan safe data handling
+			// Prisma groupBy tidak include relations, jadi kita perlu fetch names separately
+			
+			// Build category name lookup map
+			const categoryIds = blogsByCategory.map((item: any) => item.categoryId).filter(Boolean);
+			const categories = categoryIds.length > 0 
+				? await (prisma as any).category.findMany({
+					where: { id: { in: categoryIds } },
+					select: { id: true, name: true },
+				})
+				: [];
+			const categoryNameMap = new Map(categories.map((c: any) => [c.id, c.name]));
+
+			// Build author name lookup map
+			const authorIds = blogsByAuthor.map((item: any) => item.authorId).filter(Boolean);
+			const authors = authorIds.length > 0
+				? await (prisma as any).user.findMany({
+					where: { id: { in: authorIds } },
+					select: { id: true, name: true },
+				})
+				: [];
+			const authorNameMap = new Map(authors.map((a: any) => [a.id, a.name]));
+
+			// Build tag name lookup map
+			const tagIds = blogsByTags.map((item: any) => item.tagId).filter(Boolean);
+			const tags = tagIds.length > 0
+				? await (prisma as any).tag.findMany({
+					where: { id: { in: tagIds } },
+					select: { id: true, name: true },
+				})
+				: [];
+			const tagNameMap = new Map(tags.map((t: any) => [t.id, t.name]));
+
+			// Map IDs to names dengan safe fallback
 			const byCategory: Record<string, number> = {};
 			blogsByCategory.forEach((item: any) => {
-				byCategory[item.category.name] = item._count.id;
+				const categoryName = (categoryNameMap.get(item.categoryId) || 'Unknown') as string;
+				byCategory[categoryName] = item._count.id;
 			});
 
 			const byAuthor: Record<string, number> = {};
 			blogsByAuthor.forEach((item: any) => {
-				byAuthor[item.author.name] = item._count.id;
+				const authorName = (authorNameMap.get(item.authorId) || 'Unknown') as string;
+				byAuthor[authorName] = item._count.id;
 			});
 
 			const byTags: Record<string, number> = {};
 			blogsByTags.forEach((item: any) => {
-				byTags[item.tag.name] = item._count.blogId;
+				const tagName = (tagNameMap.get(item.tagId) || 'Unknown') as string;
+				byTags[tagName] = item._count.blogId;
 			});
 
 			// Transform recent and popular blogs
