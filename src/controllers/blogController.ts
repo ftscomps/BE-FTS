@@ -251,6 +251,8 @@ export const getRelatedBlogs = async (
 
 /**
  * Get blog statistics (Public)
+ * Returns comprehensive blog stats untuk admin dashboard dan analytics
+ * Frontend consume: totalBlogs, totalPublished, totalDrafts, totalViews, totalCategories, totalTags
  */
 export const getBlogStats = async (
 	_req: Request,
@@ -261,19 +263,32 @@ export const getBlogStats = async (
 		// Create service instance
 		const blogService = new BlogService();
 
-		// Get statistics
+		// Get statistics dari service
 		const stats = await blogService.getBlogStats();
 
-		logger.info(`✅ Blog statistics retrieved: ${stats.total} total blogs`);
+		logger.info(`✅ Blog statistics retrieved: ${stats.total} total blogs, ${stats.totalCategories} categories, ${stats.totalTags} tags`);
+
+		// Transform response untuk frontend compatibility
+		// Frontend expect: totalBlogs, totalPublished, totalDrafts
+		// Service return: total, published, draft
+		// Kita provide both untuk backward compatibility
+		const response = {
+			...stats,
+			// Add aliases untuk frontend compatibility
+			totalBlogs: stats.total,
+			totalPublished: stats.published,
+			totalDrafts: stats.draft,
+		};
 
 		res.json({
 			success: true,
-			data: stats,
+			data: response,
 		});
 	} catch (error) {
 		logger.error('❌ Get blog stats controller error:', error);
 
 		res.status(500).json({
+			success: false,
 			error: 'Internal Server Error',
 			message: 'Failed to retrieve blog statistics',
 		});

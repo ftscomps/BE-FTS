@@ -185,12 +185,15 @@ export interface BlogListResponse {
 
 /**
  * Blog statistics
+ * Extended to include totalCategories dan totalTags untuk frontend dashboard
  */
 export interface BlogStats {
   total: number;
   published: number;
   draft: number;
   totalViews: number;
+  totalCategories: number;  // Total count of categories
+  totalTags: number;        // Total count of tags
   byCategory: Record<string, number>;
   byAuthor: Record<string, number>;
   byTags: Record<string, number>;

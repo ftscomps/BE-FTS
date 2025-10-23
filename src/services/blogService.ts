@@ -813,53 +813,63 @@ export class BlogService {
 
 	/**
 	 * Get blog statistics
+	 * Includes all blog metrics untuk admin dashboard dan public stats
 	 */
 	async getBlogStats(): Promise<BlogStats> {
 		try {
+			// Parallel fetch semua statistics untuk performance optimal
 			const [
 				total,
 				published,
 				draft,
 				totalViews,
+				totalCategories,    // ADDED: Total count of all categories
+				totalTags,          // ADDED: Total count of all tags
 				blogsByCategory,
 				blogsByAuthor,
 				blogsByTags,
 				recentBlogs,
 				popularBlogs,
 			] = await Promise.all([
-				// Total blogs
+				// Total blogs count
 				(prisma as any).blog.count(),
 
-				// Published blogs
+				// Published blogs count
 				(prisma as any).blog.count({ where: { isPublished: true } }),
 
-				// Draft blogs
+				// Draft blogs count
 				(prisma as any).blog.count({ where: { isPublished: false } }),
 
-				// Total views
+				// Total views sum (aggregate all blog views)
 				(prisma as any).blog.aggregate({
 					_sum: { views: true },
 				}),
 
-				// Blogs by category
+				// Total categories count (untuk frontend dashboard)
+				(prisma as any).category.count(),
+
+				// Total tags count (untuk frontend dashboard)
+				(prisma as any).tag.count(),
+
+				// Blogs grouped by category (for detailed breakdown)
 				(prisma as any).blog.groupBy({
 					by: ['categoryId'],
 					_count: { id: true },
 				}),
 
-				// Blogs by author
+				// Blogs grouped by author (for detailed breakdown)
 				(prisma as any).blog.groupBy({
 					by: ['authorId'],
 					_count: { id: true },
 				}),
 
-				// Blogs by tags
+				// Blogs grouped by tags (for detailed breakdown)
 				(prisma as any).blogTag.groupBy({
 					by: ['tagId'],
 					_count: { blogId: true },
 				}),
 
-				// Recent blogs
+				// Recent 5 blogs (sorted by creation date)
 				(prisma as any).blog.findMany({
 					take: 5,
 					orderBy: { createdAt: 'desc' },
@@ -881,7 +891,7 @@ export class BlogService {
 					},
 				}),
 
-				// Popular blogs
+				// Popular 5 blogs (sorted by views, published only)
 				(prisma as any).blog.findMany({
 					take: 5,
 					orderBy: { views: 'desc' },
@@ -933,11 +943,16 @@ export class BlogService {
 				}));
 			};
 
+			// Return complete blog statistics
+			// Frontend dashboard akan consume totalBlogs, totalPublished, totalDrafts, 
+			// totalViews, totalCategories, totalTags untuk display cards
 			return {
 				total,
 				published,
 				draft,
 				totalViews: totalViews._sum.views || 0,
+				totalCategories,  // NEW: Count of all categories
+				totalTags,        // NEW: Count of all tags
 				byCategory,
 				byAuthor,
 				byTags,
